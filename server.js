@@ -98,7 +98,7 @@ app.get('/api/exercise/log', (req, res) => {
       var count = user.exercise.length;
       res.json({
           count: count,
-          logs: user.exercise
+          log: user.exercise
       })
   })
   // retrieve exercise log of any user with params userId(_id)
