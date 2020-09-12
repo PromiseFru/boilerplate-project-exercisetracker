@@ -88,7 +88,7 @@ app.post('/api/exercise/add', (req, res, next) => {
 })
 
 app.get('/api/exercise/log', (req, res) => {
-  var id = req.query.userid;
+  var id = req.query.userId;
   var from = req.query.from;
   var to = req.query.to;
   var limit = req.query.limit
