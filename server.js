@@ -58,7 +58,7 @@ app.get('/api/exercise/users', (req, res) => {
 })
 
 app.post('/api/exercise/add', (req, res, next) => {
-  var id = req.body.id;
+  var id = req.body.userId;
   var description = req.body.description;
   var duration = req.body.duration;
   var date = req.body.date;
