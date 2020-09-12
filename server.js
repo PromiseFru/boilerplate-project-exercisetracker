@@ -44,7 +44,7 @@ app.post('/api/exercise/new-user', (req, res) => {
       if(err) return console.log(err);
       res.json({
           username: user.username,
-          Id: user._id
+          _id: user._id
       })
   })
 });
