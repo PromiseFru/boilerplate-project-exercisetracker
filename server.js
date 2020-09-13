@@ -62,8 +62,8 @@ app.post('/api/exercise/add', (req, res, next) => {
   var description = req.body.description;
   var duration = req.body.duration;
   var date = req.body.date;
-  if(date == "") {
-      date = Date();
+  if(!date) {
+      var date = Date();
   }
   var newExercise = {
       description: description,
@@ -77,7 +77,7 @@ app.post('/api/exercise/add', (req, res, next) => {
           if (err) return console.log(err);
           var lastExerciseExtract = user.exercise.slice(-1)[0];
           res.json({
-              id: user._id,
+              _id: user._id,
               username: user.username,
               description: lastExerciseExtract.description,
               duration: lastExerciseExtract.duration,
