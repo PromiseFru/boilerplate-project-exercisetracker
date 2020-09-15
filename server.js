@@ -68,12 +68,10 @@ app.post('/api/exercise/add', (req, res, next) => {
       var date = new Date(dateH);
   }
 
-  var yyyy = date.toDateString();
-
   var newExercise = {
       description: description,
       duration: duration,
-      date: yyyy
+      date: date
   }
 
  User.updateOne({_id: id}, {$push: {exercise:newExercise}}, (err) => {
@@ -86,7 +84,7 @@ app.post('/api/exercise/add', (req, res, next) => {
               username: user.username,
               description: lastExerciseExtract.description,
               duration: lastExerciseExtract.duration,
-              date: lastExerciseExtract.date
+              date: lastExerciseExtract.date.toDateString()
           })
       }) 
  })
@@ -96,16 +94,57 @@ app.get('/api/exercise/log', (req, res) => {
   var id = req.query.userId;
   var from = req.query.from;
   var to = req.query.to;
-  var limit = req.query.limit
+  var limit = parseInt(req.query.limit, 10);
 
-  User.findById(id, (err, user) => {
-      if(err) return console.log(err);
-      var count = user.exercise.length;
-      res.json({
-          count: count,
-          log: user.exercise
+  if(typeof from !== "undefined" && typeof to !== "undefined" ){
+      User.aggregate([
+          {
+              $match:{_id: mongoose.Types.ObjectId(id)},
+          },
+          {
+              $project: {
+                  exercise:{
+                      $filter: {
+                          input: "$exercise",
+                          as: "exerciseList",
+                          cond: {
+                              $and:[
+                                  {$gte:["$$exerciseList.date", new Date(from)]},
+                                  {$lte:["$$exerciseList.date", new Date(to)]}
+                              ]
+                          }
+                      } 
+                  }
+              }
+          },
+          {$unwind: "$exercise"},
+          {$limit: limit},
+          {
+              $group: {
+                  _id: null,
+                  count: {$sum: 1},
+                  log: {$push: "$exercise"}
+              }
+          },
+          {
+              $project: {
+                  _id: 0
+              }
+          }
+      ])
+      .then(user => res.json(user[0]))
+      .catch(err => console.log(err))
+  }else{
+      User.findById(id, (err, user) => {
+          if(err) return console.log(err);
+          var count = user.exercise.length;
+          res.json({
+              count: count,
+              log: user.exercise,
+          })
       })
-  })
+  }
+  
   // retrieve exercise log of any user with params userId(_id)
   // retrieve part of log by passing optional params of (from , to) = yyyy-mm-dd or limit = int
   // returnu ser obj with array log and count
