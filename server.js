@@ -9,7 +9,7 @@ var port = 3000;
 var Schema = mongoose.Schema;
 dotenv.config();
 
-app.use(cors);
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}))
 
