@@ -23,7 +23,7 @@ var userSchema = new Schema({
     exercise:[{
         description: String,
         duration: Number,
-        date: Date
+        date: String
     }]
 })
 // create Model
@@ -81,7 +81,7 @@ app.post('/api/exercise/add', async function (req, res) {
                 username: user.username,
                 description: lastExerciseExtract.description,
                 duration: lastExerciseExtract.duration,
-                date: lastExerciseExtract.date.toDateString()
+                date: new Date(lastExerciseExtract.date).toDateString()
             })
         }) 
    })
@@ -160,8 +160,8 @@ app.get('/api/exercise/log', (req, res) => {
     User.aggregate(aggregateBuilder(), (err, user) => {
         if (err) return console.log(err);
         res.json({
-            count: user.count,
-            log: user.log
+            count: user[0].count,
+            log: user[0].log
         })
     })
 
