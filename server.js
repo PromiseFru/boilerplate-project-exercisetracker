@@ -60,9 +60,9 @@ app.post('/api/exercise/add', async function (req, res) {
     var duration = req.body.duration;
     var dateH = req.body.date;
     if(dateH == "") {
-        var date = new Date();
+        var date = Date();
     }else{
-        var date = new Date(dateH);
+        var date = Date(dateH);
     }
 
     var newExercise = {
