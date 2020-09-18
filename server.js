@@ -23,7 +23,7 @@ var userSchema = new Schema({
     exercise:[{
         description: String,
         duration: Number,
-        date: String
+        date: Date
     }]
 })
 // create Model
@@ -60,7 +60,7 @@ app.post('/api/exercise/add', async function (req, res) {
     var duration = req.body.duration;
     var dateH = req.body.date;
     if(dateH == "") {
-        var date = new Date();
+        var date = Date.now();
     }else{
         var date = new Date(dateH);
     }
@@ -99,56 +99,67 @@ app.get('/api/exercise/log', (req, res) => {
     }
 
     var aggregateBuilder = function() {
-        return [
-            {
-                $match:{_id: mongoose.Types.ObjectId(id)},
-            },
-            {
-                $project: {
-                    exercise:{
-                        $filter: {
-                            input: "$exercise",
-                            as: "exerciseList",
-                            cond: {$and: [
-                                {$gte:["$$exerciseList.date", new Date(from)]},    
-                                {$lte:["$$exerciseList.date", new Date(to)]}    
-                                ]   
-                            }
-                        } 
+        if(typeof from === "undefined" && typeof to === "undefined"){
+            return [
+                {
+                    $match:{_id: mongoose.Types.ObjectId(id)},
+                },
+                {$unwind: "$exercise"},
+                {$limit: limit},
+                {
+                    $group: {
+                        _id: null,
+                        count: {$sum: 1},
+                        log: {$push: "$exercise"}
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0
                     }
                 }
-            },
-            {$unwind: "$exercise"},
-            {$limit: limit},
-            {
-                $group: {
-                    _id: null,
-                    count: {$sum: 1},
-                    log: {$push: "$exercise"}
+            ]
+        }else{
+            return [
+                {
+                    $match:{_id: mongoose.Types.ObjectId(id)},
+                },
+                {
+                    $project: {
+                        exercise:{
+                            $filter: {
+                                input: "$exercise",
+                                as: "exerciseList",
+                                cond: {$and: [
+                                    {$gte:["$$exerciseList.date", new Date(from)]},    
+                                    {$lte:["$$exerciseList.date", new Date(to)]}    
+                                    ]   
+                                }
+                            } 
+                        }
+                    }
+                },
+                {$unwind: "$exercise"},
+                {$limit: limit},
+                {
+                    $group: {
+                        _id: null,
+                        count: {$sum: 1},
+                        log: {$push: "$exercise"}
+                    }
+                },
+                {
+                    $project: {
+                        _id: 0
+                    }
                 }
-            },
-            {
-                $project: {
-                    _id: 0
-                }
-            }
-        ]
+            ]
+        }
     }
-    if(typeof from == "undefined" && typeof to == "undefined"){
-        User.findById(id, (err, user) => {
-            if(err) return console.log(err);
-            var count = user.exercise.length;
-            res.json({
-                count: count,
-                log: user.exercise
-            })
-        })
-    }else{
-        User.aggregate(aggregateBuilder(), (err, user) => {
-            if (err) return console.log(err);
-            res.json(user[0]);
-        })
-    }
+    User.aggregate(aggregateBuilder(), (err, user) => {
+        if (err) return console.log(err);
+        res.json(user[0]);
+    })
 
     // retrieve exercise log of any user with params userId(_id)
     // retrieve part of log by passing optional params of (from , to) = yyyy-mm-dd or limit = int
